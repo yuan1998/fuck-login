@@ -1,15 +1,15 @@
 import puppeteer from 'puppeteer';
 import {convertImageToBase64, formatCookie, ocrImage} from "../utils/helper.js";
 
-export const weiboLogin = async (account,url = null) => {
+export const weiboLogin = async (account, url = null) => {
     const {username, password} = account;
     const browser = await puppeteer.launch({
-        headless: 'new',
+        headless:  process.env.HEADLESS || false,
         args: ["--no-sandbox"]
     });
+    const page = await browser.newPage();
     let cookies = null;
     try {
-        const page = await browser.newPage();
         await page.setViewport({
             width: 1440,
             height: 980,
@@ -17,7 +17,7 @@ export const weiboLogin = async (account,url = null) => {
         });
         // 导航到新浪微博登录页面
         url = url || 'https://weibo.com/login.php';
-        console.log("url",url);
+        console.log("url", url);
         await page.goto(url);
         // await page.waitForNavigation({ waitUntil: 'networkidle' });
 
@@ -56,7 +56,7 @@ export const weiboLogin = async (account,url = null) => {
             const codeImgExists = async () => {
                 return await page.evaluate(async () => {
                     const imgElement = document.querySelector(".info_list.verify img"); // 替换为你要判断的元素选择器
-                return imgElement?.src && imgElement.src !== 'about:blank'
+                    return imgElement?.src && imgElement.src !== 'about:blank'
                 });
             }
             if (await codeImgExists()) {
@@ -76,7 +76,7 @@ export const weiboLogin = async (account,url = null) => {
         let codePass = false;
         do {
             codePass = await checkCapCode();
-            console.log("codePass",codePass);
+            console.log("codePass", codePass);
         } while (!codePass)
         await page.waitForNetworkIdle({
             timeout: 8000
@@ -86,6 +86,7 @@ export const weiboLogin = async (account,url = null) => {
         await page.screenshot({path: 'example.png'});
         cookies = await page.cookies();
     } catch (e) {
+        await page.screenshot({path: 'error.png'});
         console.log("e", e);
     }
 
