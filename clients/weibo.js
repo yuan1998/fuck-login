@@ -3,7 +3,10 @@ import {convertImageToBase64, formatCookie, ocrImage} from "../utils/helper.js";
 
 export const weiboLogin = async (account,url = null) => {
     const {username, password} = account;
-    const browser = await puppeteer.launch({headless: 'new'});
+    const browser = await puppeteer.launch({
+        headless: 'new',
+        args: ["--no-sandbox"]
+    });
     let cookies = null;
     try {
         const page = await browser.newPage();
